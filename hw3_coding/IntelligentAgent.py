@@ -17,7 +17,7 @@ class IntelligentAgent(BaseAI):
 
     def availableCellCount(self, grid):
         return len(grid.getAvailableCells())
-    
+
     def averageTileValue(self, grid):
         sum = 0
         count = 0
@@ -28,7 +28,7 @@ class IntelligentAgent(BaseAI):
                     count += 1
 
         return math.log2(sum / count)
-    
+
     def monotonicity(self, grid):
         # Check Downward
         downScore = 0
@@ -74,7 +74,7 @@ class IntelligentAgent(BaseAI):
         horizontalScore = max(rightScore, leftScore)
 
         return verticalScore + horizontalScore
-    
+
     def smoothness(self, grid):
         def getNeighbors(row, col):
             neighbors = []
@@ -89,7 +89,7 @@ class IntelligentAgent(BaseAI):
 
             if col == 0:
                 neighbors.append((row, col + 1))
-            elif col == grid.size - 1:    
+            elif col == grid.size - 1:
                 neighbors.append((row, col - 1))
             else:
                 neighbors.append((row, col - 1))
@@ -109,7 +109,7 @@ class IntelligentAgent(BaseAI):
                         smoothnessScore -= diff if diff <= 1 else math.log2(diff)
 
         return smoothnessScore
-                
+
 
     def eval(self, grid):
         # Calculate heuristic value of the grid
@@ -123,7 +123,7 @@ class IntelligentAgent(BaseAI):
         smoothness         = self.smoothness(grid)
 
         # print(
-        #     "No Gain", 
+        #     "No Gain",
         #     # availableCellCount,
         #     averageTileValue,
         #     monotonicity,
@@ -131,7 +131,7 @@ class IntelligentAgent(BaseAI):
         # )
 
         # print(
-        #     "With Gain", 
+        #     "With Gain",
         #     # gain[0] * availableCellCount,
         #     gain[1] * averageTileValue,
         #     gain[2] * monotonicity,
@@ -143,7 +143,46 @@ class IntelligentAgent(BaseAI):
                gain[2] * monotonicity       + \
                gain[3] * smoothness
 
-    def minimize(self, grid, alpha, beta, depth):
+    def expectimax(self, grid, alpha, beta, depth):
+        # print("Maximize at depth:", depth)
+        # End this depth if time is almost up
+        # import pdb; pdb.set_trace()
+        if time.process_time() - self.turnStartTime > self.maxTime - self.buffer:
+            return None
+
+        if depth == 0:
+            # print('Depth 0 reached')
+            return None, self.eval(grid), None
+
+        # Player will maximize
+        maxUtility = float('-inf')
+        maxChild = None
+        maxMove = None
+
+        if self.terminalTestMax(grid):
+            return None, self.eval(grid), None
+
+        for move, newGrid in grid.getAvailableMoves():
+            # import pdb; pdb.set_trace()
+            res = self.expectimin(newGrid, alpha, beta, depth)
+
+            if isinstance(res, tuple):
+                _, utility, _ = res
+            else:
+                return None
+
+            if utility > maxUtility:
+                maxChild, maxUtility, maxMove = newGrid, utility, move
+
+            if maxUtility >= beta:
+                break
+
+            if maxUtility > alpha:
+                alpha = maxUtility
+
+        return maxChild, maxUtility, maxMove
+
+    def expectimin(self, grid, alpha, beta, depth):
         # print("Minimize at depth:", depth)
         # End this depth if time is almost up
         # import pdb; pdb.set_trace()
@@ -151,7 +190,7 @@ class IntelligentAgent(BaseAI):
         if time.process_time() - self.turnStartTime > self.maxTime - self.buffer:
             # print('Returning None due to time limit')
             return None
-        
+
         # Computer will minimize
         minUtility = float('inf')
         minChild = None
@@ -160,16 +199,78 @@ class IntelligentAgent(BaseAI):
         # if depth == 0:
             # print('Depth 0 reached')
         #     return None, self.eval(grid), None
-        
+
+        # for tileValue in [2, 4]:
+            # print("Inserting tile:", tileValue)
+        for emptyCell in grid.getAvailableCells():
+            # print('CCCCCC')
+            # print("At cell:", emptyCell)
+
+            res = self.expectichance(grid, alpha, beta, depth, emptyCell)
+
+            if isinstance(res, tuple):
+                newGrid, utility, move = res
+            else:
+                # print('DDDDDDDD')
+                return None
+
+            if utility < minUtility:
+                # print("New min utility:", utility, "at cell", emptyCell, "with tile", tileValue)
+                minChild, minUtility, minMove = newGrid, utility, move
+
+            # if minUtility <= alpha:
+            #     break
+
+            if minUtility < beta:
+                beta = minUtility
+
+                # print('EEEEEEEEE')
+        return minChild, minUtility, minMove
+
+    def expectichance(self, grid, alpha, beta, depth, cell):
+        chanceNodeUtility = 0
+        for tileValue, probability in [(2, 0.9), (4, 0.1)]:
+            newGrid = grid.clone()
+            newGrid.setCellValue(cell, tileValue)
+            res = self.expectimax(newGrid, alpha, beta, depth - 1)
+
+            if isinstance(res, tuple):
+                _, utility, move = res
+                chanceNodeUtility += probability * utility
+            else:
+                # print('DDDDDDDD')
+                return None
+
+        return newGrid, chanceNodeUtility, move
+
+
+    def minimize(self, grid, alpha, beta, depth):
+        # print("Minimize at depth:", depth)
+        # End this depth if time is almost up
+        # import pdb; pdb.set_trace()
+        # print('Start time:', self.turnStartTime)
+        if time.process_time() - self.turnStartTime > self.maxTime - self.buffer:
+            # print('Returning None due to time limit')
+            return None
+
+        # Computer will minimize
+        minUtility = float('inf')
+        minChild = None
+        minMove = None
+
+        # if depth == 0:
+            # print('Depth 0 reached')
+        #     return None, self.eval(grid), None
+
         for tileValue in [2, 4]:
             # print("Inserting tile:", tileValue)
             for emptyCell in grid.getAvailableCells():
                 # print('CCCCCC')
                 # print("At cell:", emptyCell)
-                
+
                 newGrid = grid.clone()
                 newGrid.setCellValue(emptyCell, tileValue)
-                
+
                 res = self.maximize(newGrid, alpha, beta, depth - 1)
 
                 if isinstance(res, tuple):
@@ -201,7 +302,7 @@ class IntelligentAgent(BaseAI):
         if depth == 0:
             # print('Depth 0 reached')
             return None, self.eval(grid), None
-        
+
         # Player will maximize
         maxUtility = float('-inf')
         maxChild = None
@@ -209,8 +310,8 @@ class IntelligentAgent(BaseAI):
 
         if self.terminalTestMax(grid):
             return None, self.eval(grid), None
-        
-        for move, newGrid in grid.getAvailableMoves():                
+
+        for move, newGrid in grid.getAvailableMoves():
             # import pdb; pdb.set_trace()
             res = self.minimize(newGrid, alpha, beta, depth)
 
@@ -229,11 +330,11 @@ class IntelligentAgent(BaseAI):
                 alpha = maxUtility
 
         return maxChild, maxUtility, maxMove
-    
+
     def terminalTestMax(self, grid):
         # Check if there are no available moves
         return grid.canMove() == False
-    
+
     def terminalTestMin(self, grid):
         # Check if there are no empty cells
         return len(grid.getAvailableCells()) == 0
@@ -248,7 +349,7 @@ class IntelligentAgent(BaseAI):
         while time.process_time() - self.turnStartTime < self.maxTime - self.buffer:
             # print("Searching at depth:", depth)
             # print("Starting grid:", grid.map)
-            res = self.maximize(grid, float('-inf'), float('inf'), depth)
+            res = self.expectimax(grid, float('-inf'), float('inf'), depth)
 
             if isinstance(res, tuple):
                 _, _, move = res
