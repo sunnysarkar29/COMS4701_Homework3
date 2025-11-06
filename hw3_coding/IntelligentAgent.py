@@ -11,7 +11,11 @@ class IntelligentAgent(BaseAI):
     buffer  = 0.01  # Buffer time to make sure we don't exceed maxTime
     turnStartTime = None
 
-    def minimize(self, grid, alpha, beta):
+    def minimize(self, grid, alpha, beta, depth):
+        # End this depth if time is almost up
+        if time.process_time() - self.turnStartTime > self.maxTime - self.buffer:
+            return None
+        
         # Computer will minimize
         minUtility = float('inf')
         minChild = None
@@ -25,7 +29,12 @@ class IntelligentAgent(BaseAI):
 
                 newGrid = grid.clone().setCellValue(emptyCell, tileValue)
                 
-                _, utility, move = self.maximize(newGrid, alpha, beta)
+                res = self.maximize(newGrid, alpha, beta, depth)
+
+                if isinstance(res, tuple):
+                    _, utility, move = res
+                else:
+                    return None
 
                 if utility < minUtility:
                     minChild, minUtility, minMove = newGrid, utility, move
@@ -38,7 +47,11 @@ class IntelligentAgent(BaseAI):
 
         return minChild, minUtility, minMove
 
-    def maximize(self, grid, alpha, beta):
+    def maximize(self, grid, alpha, beta, depth):
+        # End this depth if time is almost up
+        if time.process_time() - self.turnStartTime > self.maxTime - self.buffer:
+            return None
+        
         # Player will maximize
         maxUtility = float('-inf')
         maxChild = None
@@ -48,7 +61,14 @@ class IntelligentAgent(BaseAI):
             return None, eval(grid), None
         
         for move, newGrid in grid.getAvailableMoves():
-            _, utility, _ = self.maximize(newGrid, alpha, beta)
+            _, utility, _ = self.maximize(newGrid, alpha, beta, depth - 1)
+                
+            res = self.maximize(newGrid, alpha, beta, depth - 1)
+
+            if isinstance(res, tuple):
+                _, utility, _ = res
+            else:
+                return None
 
             if utility > maxUtility:
                 maxChild, maxUtility, minMoveMove = newGrid, utility, move
@@ -69,29 +89,17 @@ class IntelligentAgent(BaseAI):
         # Check if there are no empty cells
         return len(grid.getAvailableCells()) == 0
 
-
-
-    def getMove(self, grid):
+    def getMoveWithIds(self, grid):
         startTime = time.process_time()
 
         # Implement iterative deepening here
-        
+        depth = 1
+        while time.process_time() - startTime < self.maxTime - self.buffer:
+            availableMoves, resultGrid = grid.getAvailableMoves()
+
+            for 
         
 
 
         return random.choice(moveset)[0] if moveset else None
-
-    # def getMoveWithIds(self, grid):
-    #     startTime = time.process_time()
-
-    #     # Implement iterative deepening here
-    #     depth = 1
-    #     while time.process_time() - startTime < self.maxTime - self.buffer:
-    #         availableMoves, resultGrid = grid.getAvailableMoves()
-
-    #         for 
-        
-
-
-    #     return random.choice(moveset)[0] if moveset else None
         
