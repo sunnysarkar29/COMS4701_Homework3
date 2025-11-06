@@ -12,6 +12,7 @@ class IntelligentAgent(BaseAI):
     turnStartTime = None
 
     def minimize(self, grid, alpha, beta):
+        # Computer will minimize
         minUtility = float('inf')
         minChild = None
         minMove = None
@@ -19,21 +20,26 @@ class IntelligentAgent(BaseAI):
         if self.terminalTestMin(grid):
             return None, eval(grid), None
         
-        for move, newGrid in grid.getAvailableMoves():
-            _, utility = self.maximize(newGrid, alpha, beta)
+        for tileValue in [2, 4]:
+            for emptyCell in grid.getAvailableCells():
 
-            if utility < minUtility:
-                minChild, minUtility, minMove = newGrid, utility, move
+                newGrid = grid.clone().setCellValue(emptyCell, tileValue)
+                
+                _, utility, move = self.maximize(newGrid, alpha, beta)
 
-            if minUtility <= alpha:
-                break
+                if utility < minUtility:
+                    minChild, minUtility, minMove = newGrid, utility, move
 
-            if minUtility < beta:
-                beta = minUtility
+                if minUtility <= alpha:
+                    break
+
+                if minUtility < beta:
+                    beta = minUtility
 
         return minChild, minUtility, minMove
 
     def maximize(self, grid, alpha, beta):
+        # Player will maximize
         maxUtility = float('-inf')
         maxChild = None
         maxMove = None
@@ -42,10 +48,10 @@ class IntelligentAgent(BaseAI):
             return None, eval(grid), None
         
         for move, newGrid in grid.getAvailableMoves():
-            _, utility = self.maximize(newGrid, alpha, beta)
+            _, utility, _ = self.maximize(newGrid, alpha, beta)
 
             if utility > maxUtility:
-                maxChild, maxUtility, minmaxMoveMove = newGrid, utility, move
+                maxChild, maxUtility, minMoveMove = newGrid, utility, move
 
             if maxUtility <= alpha:
                 break
