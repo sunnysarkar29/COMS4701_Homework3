@@ -2,6 +2,7 @@ import random
 from BaseAI import BaseAI
 
 import time
+import math
 
 vecIndex = [UP, DOWN, LEFT, RIGHT] = range(4)
 # getAvailableMoves(self, dirs=vecIndex): # -> List[(int, Grid)]
@@ -13,7 +14,19 @@ class IntelligentAgent(BaseAI):
 
     def eval(self, grid):
         # Calculate heuristic value of the grid
-        return 1.0
+        # Avaliable_cell_count
+        avaliable_cell_count = len(grid.getAvailableCells())
+
+        # average_tile_value
+        sum = 0
+        count = 0
+        for x in range(grid.size):
+            for y in range(grid.size):
+                if grid.getCellValue((x, y)) != 0:
+                    sum += grid.getCellValue((x, y))
+                    count += 1
+
+        return math.log2(sum / count) + avaliable_cell_count
 
     def minimize(self, grid, alpha, beta, depth):
         # End this depth if time is almost up
@@ -94,6 +107,7 @@ class IntelligentAgent(BaseAI):
         return len(grid.getAvailableCells()) == 0
 
     def getMoveWithIds(self, grid):
+        import pdb; pdb.set_trace()
         startTime = time.process_time()
 
         # Implement iterative deepening here
