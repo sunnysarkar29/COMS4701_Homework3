@@ -11,6 +11,10 @@ class IntelligentAgent(BaseAI):
     buffer  = 0.01  # Buffer time to make sure we don't exceed maxTime
     turnStartTime = None
 
+    def eval(self, grid):
+        # Calculate heuristic value of the grid
+        return 1.0
+
     def minimize(self, grid, alpha, beta, depth):
         # End this depth if time is almost up
         if time.process_time() - self.turnStartTime > self.maxTime - self.buffer:
@@ -21,7 +25,7 @@ class IntelligentAgent(BaseAI):
         minChild = None
         minMove = None
 
-        if self.terminalTestMin(grid):
+        if self.terminalTestMin(grid) or depth == 0:
             return None, eval(grid), None
         
         for tileValue in [2, 4]:
@@ -94,12 +98,13 @@ class IntelligentAgent(BaseAI):
 
         # Implement iterative deepening here
         depth = 1
+        move = grid.getAvailableMoves()[0][0]  # Default move
+
         while time.process_time() - startTime < self.maxTime - self.buffer:
-            availableMoves, resultGrid = grid.getAvailableMoves()
+            res = self.minimize(grid, float('-inf'), float('inf'), depth)
 
-            for 
-        
-
-
-        return random.choice(moveset)[0] if moveset else None
-        
+            if isinstance(res, tuple):
+                _, _, move = res
+            else:
+                break
+            depth += 1
