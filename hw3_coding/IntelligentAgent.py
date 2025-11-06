@@ -12,12 +12,10 @@ class IntelligentAgent(BaseAI):
     buffer  = 0.01  # Buffer time to make sure we don't exceed maxTime
     turnStartTime = None
 
-    def eval(self, grid):
-        # Calculate heuristic value of the grid
-        # Avaliable_cell_count
-        avaliable_cell_count = len(grid.getAvailableCells())
-
-        # average_tile_value
+    def availableCellCount(self, grid):
+        return len(grid.getAvailableCells())
+    
+    def averageTileValue(self, grid):
         sum = 0
         count = 0
         for x in range(grid.size):
@@ -26,7 +24,61 @@ class IntelligentAgent(BaseAI):
                     sum += grid.getCellValue((x, y))
                     count += 1
 
-        return math.log2(sum / count) + avaliable_cell_count
+        return math.log2(sum / count)
+    
+    def monotonicity(self, grid):
+        # Check Downward
+        downScore = 0
+        for col in range(4):
+            colScore = 0
+            for row in range(0,4):
+                for nextRow in range(row + 1, 4):
+                    if grid.getCellValue((nextRow, col)) > grid.getCellValue((row, col)):
+                        colScore += 1
+            downScore += colScore
+
+        # Check Upward
+        upScore = 0
+        for col in range(4):
+            colScore = 0
+            for row in range(0,4)[::-1]:
+                for nextRow in range(0, row)[::-1]:
+                    if grid.getCellValue((nextRow, col)) > grid.getCellValue((row, col)):
+                        colScore += 1
+            upScore += colScore
+
+        verticalScore = max(downScore, upScore)
+
+        # Check Rightward
+        rightScore = 0
+        for row in range(4):
+            rowScore = 0
+            for col in range(0,4):
+                for nextCol in range(col + 1, 4):
+                    if grid.getCellValue((row, nextCol)) > grid.getCellValue((row, col)):
+                        rowScore += 1
+            rightScore += rowScore
+
+        # Check Leftward
+        leftScore = 0
+        for row in range(4):
+            rowScore = 0
+            for col in range(0,4)[::-1]:
+                for nextCol in range(0, col)[::-1]:
+                    if grid.getCellValue((row, nextCol)) > grid.getCellValue((row, col)):
+                        rowScore += 1
+            leftScore += rowScore
+        horizontalScore = max(rightScore, leftScore)
+
+        return verticalScore + horizontalScore
+
+    def eval(self, grid):
+        # Calculate heuristic value of the grid
+        gain = [
+            1, # Available cell count
+            1, # Average tile value
+        ]
+        return gain[0] * self.availableCellCount(grid) + gain[1] * self.averageTileValue(grid)
 
     def minimize(self, grid, alpha, beta, depth):
         # print("Minimize at depth:", depth)
@@ -132,7 +184,7 @@ class IntelligentAgent(BaseAI):
             else:
                 # print("Time's up during search at depth:", depth)
                 break
-            # import pdb; pdb.set_trace()
+            import pdb; pdb.set_trace()
             depth += 1
 
         return move
