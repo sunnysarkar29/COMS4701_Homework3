@@ -29,7 +29,9 @@ class IntelligentAgent(BaseAI):
         return math.log2(sum / count) + avaliable_cell_count
 
     def minimize(self, grid, alpha, beta, depth):
+        print("Minimize at depth:", depth)
         # End this depth if time is almost up
+        # import pdb; pdb.set_trace()
         if time.process_time() - self.turnStartTime > self.maxTime - self.buffer:
             return None
         
@@ -42,11 +44,12 @@ class IntelligentAgent(BaseAI):
             return None, eval(grid), None
         
         for tileValue in [2, 4]:
+            print("Inserting tile:", tileValue)
             for emptyCell in grid.getAvailableCells():
-
-                newGrid = grid.clone().setCellValue(emptyCell, tileValue)
+                print("At cell:", emptyCell)
+                grid.setCellValue(emptyCell, tileValue)
                 
-                res = self.maximize(newGrid, alpha, beta, depth)
+                res = self.maximize(grid, alpha, beta, depth)
 
                 if isinstance(res, tuple):
                     _, utility, move = res
@@ -54,7 +57,9 @@ class IntelligentAgent(BaseAI):
                     return None
 
                 if utility < minUtility:
-                    minChild, minUtility, minMove = newGrid, utility, move
+                    minChild, minUtility, minMove = grid, utility, move
+                else:
+                    grid.setCellValue(emptyCell, 0)  # Reset cell
 
                 if minUtility <= alpha:
                     break
@@ -65,7 +70,9 @@ class IntelligentAgent(BaseAI):
         return minChild, minUtility, minMove
 
     def maximize(self, grid, alpha, beta, depth):
+        print("Maximize at depth:", depth)
         # End this depth if time is almost up
+        # import pdb; pdb.set_trace()
         if time.process_time() - self.turnStartTime > self.maxTime - self.buffer:
             return None
         
@@ -77,10 +84,9 @@ class IntelligentAgent(BaseAI):
         if self.terminalTestMax(grid):
             return None, eval(grid), None
         
-        for move, newGrid in grid.getAvailableMoves():
-            _, utility, _ = self.maximize(newGrid, alpha, beta, depth - 1)
-                
-            res = self.maximize(newGrid, alpha, beta, depth - 1)
+        for move, newGrid in grid.getAvailableMoves():                
+            # import pdb; pdb.set_trace()
+            res = self.minimize(newGrid, alpha, beta, depth - 1)
 
             if isinstance(res, tuple):
                 _, utility, _ = res
@@ -100,21 +106,20 @@ class IntelligentAgent(BaseAI):
     
     def terminalTestMax(self, grid):
         # Check if there are no available moves
-        return len(grid.getAvailableMoves()) == 0
+        return grid.canMove() == False
     
     def terminalTestMin(self, grid):
         # Check if there are no empty cells
         return len(grid.getAvailableCells()) == 0
 
-    def getMoveWithIds(self, grid):
-        import pdb; pdb.set_trace()
-        startTime = time.process_time()
+    def getMove(self, grid):
+        self.turnStartTime = time.process_time()
 
         # Implement iterative deepening here
         depth = 1
         move = grid.getAvailableMoves()[0][0]  # Default move
 
-        while time.process_time() - startTime < self.maxTime - self.buffer:
+        while time.process_time() - self.turnStartTime < self.maxTime - self.buffer:
             res = self.minimize(grid, float('-inf'), float('inf'), depth)
 
             if isinstance(res, tuple):
