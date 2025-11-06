@@ -12,6 +12,9 @@ class IntelligentAgent(BaseAI):
     buffer  = 0.01  # Buffer time to make sure we don't exceed maxTime
     turnStartTime = None
 
+    def __init__(self, gain1, gain2, gain3, gain4):
+        self.gain = [gain1, gain2, gain3, gain4]
+
     def availableCellCount(self, grid):
         return len(grid.getAvailableCells())
     
@@ -102,46 +105,42 @@ class IntelligentAgent(BaseAI):
                     # import pdb; pdb.set_trace()
                     neighborValue = grid.getCellValue(neighbor)
                     if neighborValue != 0:
-                        smoothnessScore -= abs(homeValue - neighborValue)
+                        diff = abs(homeValue - neighborValue)
+                        smoothnessScore -= diff if diff <= 1 else math.log2(diff)
 
         return smoothnessScore
                 
 
     def eval(self, grid):
         # Calculate heuristic value of the grid
-        gain = [
-            1, # Available cell count
-            1, # Average tile value
-            1, # Monotonicity
-            1, # Smoothness
-        ]
+        gain = self.gain
+        # print("Gain:", gain)
 
         availableCellCount = self.availableCellCount(grid)
         averageTileValue   = self.averageTileValue(grid)
         monotonicity       = self.monotonicity(grid)
         smoothness         = self.smoothness(grid)
 
-        print(
-            "No Gain", 
-            # availableCellCount,
-            averageTileValue,
-            monotonicity,
-            # smoothness
-        )
+        # print(
+        #     "No Gain", 
+        #     # availableCellCount,
+        #     averageTileValue,
+        #     monotonicity,
+        #     # smoothness
+        # )
 
-        print(
-            "With Gain", 
-            # gain[0] * availableCellCount,
-            gain[1] * averageTileValue,
-            gain[2] * monotonicity,
-            # gain[3] * smoothness
-        )
+        # print(
+        #     "With Gain", 
+        #     # gain[0] * availableCellCount,
+        #     gain[1] * averageTileValue,
+        #     gain[2] * monotonicity,
+        #     # gain[3] * smoothness
+        # )
 
         return gain[0] * availableCellCount + \
-               gain[1] * averageTileValue   
-        # + \
-        #        gain[2] * monotonicity       + \
-        #        gain[3] * smoothness
+               gain[1] * averageTileValue   + \
+               gain[2] * monotonicity       + \
+               gain[3] * smoothness
 
     def minimize(self, grid, alpha, beta, depth):
         # print("Minimize at depth:", depth)
