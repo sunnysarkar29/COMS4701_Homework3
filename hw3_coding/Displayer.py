@@ -32,6 +32,7 @@ class Displayer(BaseDisplayer):
             self.display = self.unixDisplay
 
     def winDisplay(self, grid):
+        return
         for i in range(grid.size):
             for j in range(grid.size):
                 print("%6d  " % grid.map[i][j], end="")
@@ -39,6 +40,7 @@ class Displayer(BaseDisplayer):
         print("")
 
     def unixDisplay(self, grid):
+        return
         for i in range(3 * grid.size):
             for j in range(grid.size):
                 v = grid.map[int(i / 3)][j]

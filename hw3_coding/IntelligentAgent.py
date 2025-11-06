@@ -12,8 +12,8 @@ class IntelligentAgent(BaseAI):
     buffer  = 0.01  # Buffer time to make sure we don't exceed maxTime
     turnStartTime = None
 
-    # def __init__(self, gain1, gain2, gain3, gain4):
-    #     self.gain = [gain1, gain2, gain3, gain4]
+    def __init__(self, gain1, gain2, gain3, gain4):
+        self.gain = [gain1, gain2, gain3, gain4]
 
     def availableCellCount(self, grid):
         return len(grid.getAvailableCells())
@@ -113,8 +113,8 @@ class IntelligentAgent(BaseAI):
 
     def eval(self, grid):
         # Calculate heuristic value of the grid
-        # gain = self.gain
-        gain = [10.0, 2.0, 7.0, 4.0]
+        gain = self.gain
+        # gain = [10.0, 2.0, 7.0, 4.0]
         # print("Gain:", gain)
 
         availableCellCount = self.availableCellCount(grid)
