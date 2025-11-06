@@ -73,17 +73,50 @@ class IntelligentAgent(BaseAI):
         return verticalScore + horizontalScore
     
     def smoothness(self, grid):
+        def getNeighbors(row, col):
+            neighbors = []
+            if row == 0:
+                neighbors.append((row - 1, col))
+            elif row == grid.size - 1:
+                neighbors.append((row + 1, col))
+            else:
+                neighbors.append((row - 1, col))
+                neighbors.append((row + 1, col))
+
+            if col == 0:
+                neighbors.append((row, col - 1))
+            elif col == grid.size - 1:    
+                neighbors.append((row, col + 1))
+            else:
+                neighbors.append((row, col - 1))
+                neighbors.append((row, col + 1))
+            return neighbors
+
         smoothnessScore = 0
 
-        for 
+        for row in range(grid.size):
+            for col in range(grid.size):
+                homeValue = grid.getCellValue((row, col))
+                for neighbor in getNeighbors(row, col):
+                    neighborValue = grid.getCellValue(neighbor)
+                    if neighborValue != 0:
+                        smoothnessScore -= abs(homeValue - neighborValue)
+
+        return smoothnessScore
+                
 
     def eval(self, grid):
         # Calculate heuristic value of the grid
         gain = [
             1, # Available cell count
             1, # Average tile value
+            1, # Monotonicity
+            1, # Smoothness
         ]
-        return gain[0] * self.availableCellCount(grid) + gain[1] * self.averageTileValue(grid)
+        return gain[0] * self.availableCellCount(grid) + \
+               gain[1] * self.averageTileValue(grid)   + \
+               gain[2] * self.monotonicity(grid)       + \
+               gain[3] * self.smoothness(grid)
 
     def minimize(self, grid, alpha, beta, depth):
         # print("Minimize at depth:", depth)
