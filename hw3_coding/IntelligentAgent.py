@@ -16,7 +16,7 @@ class IntelligentAgent(BaseAI):
         minChild = None
         minMove = None
 
-        if terminalTest(grid):
+        if self.terminalTestMin(grid):
             return None, eval(grid), None
         
         for move, newGrid in grid.getAvailableMoves():
@@ -38,7 +38,7 @@ class IntelligentAgent(BaseAI):
         maxChild = None
         maxMove = None
 
-        if terminalTest(grid):
+        if self.terminalTestMax(grid):
             return None, eval(grid), None
         
         for move, newGrid in grid.getAvailableMoves():
@@ -55,6 +55,13 @@ class IntelligentAgent(BaseAI):
 
         return maxChild, maxUtility, maxMove
     
+    def terminalTestMax(self, grid):
+        # Check if there are no available moves
+        return len(grid.getAvailableMoves()) == 0
+    
+    def terminalTestMin(self, grid):
+        # Check if there are no empty cells
+        return len(grid.getAvailableCells()) == 0
 
 
 
