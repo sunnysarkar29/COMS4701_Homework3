@@ -29,19 +29,19 @@ class IntelligentAgent(BaseAI):
     def monotonicity(self, grid):
         # Check Downward
         downScore = 0
-        for col in range(4):
+        for col in range(grid.size):
             colScore = 0
-            for row in range(0,4):
-                for nextRow in range(row + 1, 4):
+            for row in range(0,grid.size):
+                for nextRow in range(row + 1, grid.size):
                     if grid.getCellValue((nextRow, col)) > grid.getCellValue((row, col)):
                         colScore += 1
             downScore += colScore
 
         # Check Upward
         upScore = 0
-        for col in range(4):
+        for col in range(grid.size):
             colScore = 0
-            for row in range(0,4)[::-1]:
+            for row in range(0,grid.size)[::-1]:
                 for nextRow in range(0, row)[::-1]:
                     if grid.getCellValue((nextRow, col)) > grid.getCellValue((row, col)):
                         colScore += 1
@@ -51,19 +51,19 @@ class IntelligentAgent(BaseAI):
 
         # Check Rightward
         rightScore = 0
-        for row in range(4):
+        for row in range(grid.size):
             rowScore = 0
-            for col in range(0,4):
-                for nextCol in range(col + 1, 4):
+            for col in range(0,grid.size):
+                for nextCol in range(col + 1, grid.size):
                     if grid.getCellValue((row, nextCol)) > grid.getCellValue((row, col)):
                         rowScore += 1
             rightScore += rowScore
 
         # Check Leftward
         leftScore = 0
-        for row in range(4):
+        for row in range(grid.size):
             rowScore = 0
-            for col in range(0,4)[::-1]:
+            for col in range(0,grid.size)[::-1]:
                 for nextCol in range(0, col)[::-1]:
                     if grid.getCellValue((row, nextCol)) > grid.getCellValue((row, col)):
                         rowScore += 1
@@ -71,6 +71,11 @@ class IntelligentAgent(BaseAI):
         horizontalScore = max(rightScore, leftScore)
 
         return verticalScore + horizontalScore
+    
+    def smoothness(self, grid):
+        smoothnessScore = 0
+
+        for 
 
     def eval(self, grid):
         # Calculate heuristic value of the grid
