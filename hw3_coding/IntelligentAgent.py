@@ -75,18 +75,19 @@ class IntelligentAgent(BaseAI):
     def smoothness(self, grid):
         def getNeighbors(row, col):
             neighbors = []
+            # import pdb; pdb.set_trace()
             if row == 0:
-                neighbors.append((row - 1, col))
-            elif row == grid.size - 1:
                 neighbors.append((row + 1, col))
+            elif row == grid.size - 1:
+                neighbors.append((row - 1, col))
             else:
                 neighbors.append((row - 1, col))
                 neighbors.append((row + 1, col))
 
             if col == 0:
-                neighbors.append((row, col - 1))
-            elif col == grid.size - 1:    
                 neighbors.append((row, col + 1))
+            elif col == grid.size - 1:    
+                neighbors.append((row, col - 1))
             else:
                 neighbors.append((row, col - 1))
                 neighbors.append((row, col + 1))
@@ -98,6 +99,7 @@ class IntelligentAgent(BaseAI):
             for col in range(grid.size):
                 homeValue = grid.getCellValue((row, col))
                 for neighbor in getNeighbors(row, col):
+                    # import pdb; pdb.set_trace()
                     neighborValue = grid.getCellValue(neighbor)
                     if neighborValue != 0:
                         smoothnessScore -= abs(homeValue - neighborValue)
@@ -113,16 +115,41 @@ class IntelligentAgent(BaseAI):
             1, # Monotonicity
             1, # Smoothness
         ]
-        return gain[0] * self.availableCellCount(grid) + \
-               gain[1] * self.averageTileValue(grid)   + \
-               gain[2] * self.monotonicity(grid)       + \
-               gain[3] * self.smoothness(grid)
+
+        availableCellCount = self.availableCellCount(grid)
+        averageTileValue   = self.averageTileValue(grid)
+        monotonicity       = self.monotonicity(grid)
+        smoothness         = self.smoothness(grid)
+
+        print(
+            "No Gain", 
+            # availableCellCount,
+            averageTileValue,
+            monotonicity,
+            # smoothness
+        )
+
+        print(
+            "With Gain", 
+            # gain[0] * availableCellCount,
+            gain[1] * averageTileValue,
+            gain[2] * monotonicity,
+            # gain[3] * smoothness
+        )
+
+        return gain[0] * availableCellCount + \
+               gain[1] * averageTileValue   
+        # + \
+        #        gain[2] * monotonicity       + \
+        #        gain[3] * smoothness
 
     def minimize(self, grid, alpha, beta, depth):
         # print("Minimize at depth:", depth)
         # End this depth if time is almost up
         # import pdb; pdb.set_trace()
+        # print('Start time:', self.turnStartTime)
         if time.process_time() - self.turnStartTime > self.maxTime - self.buffer:
+            # print('Returning None due to time limit')
             return None
         
         # Computer will minimize
@@ -130,22 +157,25 @@ class IntelligentAgent(BaseAI):
         minChild = None
         minMove = None
 
-        if self.terminalTestMin(grid) or depth == 0:
-            return None, self.eval(grid), None
+        # if depth == 0:
+            # print('Depth 0 reached')
+        #     return None, self.eval(grid), None
         
         for tileValue in [2, 4]:
             # print("Inserting tile:", tileValue)
             for emptyCell in grid.getAvailableCells():
+                # print('CCCCCC')
                 # print("At cell:", emptyCell)
                 
                 newGrid = grid.clone()
                 newGrid.setCellValue(emptyCell, tileValue)
                 
-                res = self.maximize(newGrid, alpha, beta, depth)
+                res = self.maximize(newGrid, alpha, beta, depth - 1)
 
                 if isinstance(res, tuple):
                     _, utility, move = res
                 else:
+                    # print('DDDDDDDD')
                     return None
 
                 if utility < minUtility:
@@ -158,6 +188,7 @@ class IntelligentAgent(BaseAI):
                 if minUtility < beta:
                     beta = minUtility
 
+                # print('EEEEEEEEE')
         return minChild, minUtility, minMove
 
     def maximize(self, grid, alpha, beta, depth):
@@ -166,6 +197,10 @@ class IntelligentAgent(BaseAI):
         # import pdb; pdb.set_trace()
         if time.process_time() - self.turnStartTime > self.maxTime - self.buffer:
             return None
+
+        if depth == 0:
+            # print('Depth 0 reached')
+            return None, self.eval(grid), None
         
         # Player will maximize
         maxUtility = float('-inf')
@@ -177,7 +212,7 @@ class IntelligentAgent(BaseAI):
         
         for move, newGrid in grid.getAvailableMoves():                
             # import pdb; pdb.set_trace()
-            res = self.minimize(newGrid, alpha, beta, depth - 1)
+            res = self.minimize(newGrid, alpha, beta, depth)
 
             if isinstance(res, tuple):
                 _, utility, _ = res
@@ -212,7 +247,8 @@ class IntelligentAgent(BaseAI):
 
         while time.process_time() - self.turnStartTime < self.maxTime - self.buffer:
             # print("Searching at depth:", depth)
-            res = self.minimize(grid, float('-inf'), float('inf'), depth)
+            # print("Starting grid:", grid.map)
+            res = self.maximize(grid, float('-inf'), float('inf'), depth)
 
             if isinstance(res, tuple):
                 _, _, move = res
@@ -222,7 +258,7 @@ class IntelligentAgent(BaseAI):
             else:
                 # print("Time's up during search at depth:", depth)
                 break
-            import pdb; pdb.set_trace()
+            # import pdb; pdb.set_trace()
             depth += 1
 
         return move
