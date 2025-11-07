@@ -72,10 +72,10 @@ class GameManager:
             move = None
 
             if turn == PLAYER_TURN:
-                # print("Player's Turn: ", end="")
+                print("Player's Turn: ", end="")
                 move = self.intelligentAgent.getMove(gridCopy)
 
-                # print(actionDic[move])
+                print(actionDic[move])
 
                 # If move is valid, attempt to move the grid
                 if move != None and 0 <= move < 4:
@@ -83,20 +83,20 @@ class GameManager:
                         self.grid.move(move)
 
                     else:
-                        # print("Invalid intelligentAgent Move - Cannot move")
+                        print("Invalid intelligentAgent Move - Cannot move")
                         self.over = True
                 else:
-                    # print("Invalid intelligentAgent Move - Invalid input")
+                    print("Invalid intelligentAgent Move - Invalid input")
                     self.over = True
             else:
-                # print("Computer's turn: ")
+                print("Computer's turn: ")
                 move = self.computerAI.getMove(gridCopy)
 
                 # Validate Move
                 if move and self.grid.canInsert(move):
                     self.grid.setCellValue(move, self.getNewTileValue())
                 else:
-                    # print("Invalid Computer AI Move")
+                    print("Invalid Computer AI Move")
                     self.over = True
 
             # Comment out during heuristing optimizations to increase runtimes.
@@ -110,34 +110,14 @@ class GameManager:
         return self.grid.getMaxTile()
 
 def main():
-    start = 0.5
-    end = 3.0
-    step = 0.5
-    my_list = []
-    current_value = start
+    for _ in range(10):
+        intelligentAgent = IntelligentAgent()
+        computerAI  = ComputerAI()
+        displayer   = Displayer()
+        gameManager = GameManager(4, intelligentAgent, computerAI, displayer)
 
-    while current_value <= end:
-        my_list.append(current_value)
-        current_value += step
-
-    print(my_list)
-    for g1 in my_list[::-1]:
-        for g2 in my_list[::-1]:
-            for g3 in my_list[::-1]:
-                for g4 in my_list[::-1]:
-                    print(f"Gain 1: {g1} - Gain 2: {g2} - Gain 3: {g3} - Gain 4: {g4}")
-                    for _ in range(2):
-                        # g1 = 10
-                        # g2 = 8
-                        # g3 = 3
-                        # g4 = 1
-                        intelligentAgent = IntelligentAgent(g1, g2, g3, g4)
-                        computerAI  = ComputerAI()
-                        displayer   = Displayer()
-                        gameManager = GameManager(4, intelligentAgent, computerAI, displayer)
-
-                        maxTile     = gameManager.start()
-                        print('  -  ' + str(maxTile))
+        maxTile     = gameManager.start()
+        print('  -  ' + str(maxTile))
 
 if __name__ == '__main__':
     main()
